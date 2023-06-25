@@ -10,10 +10,16 @@ depends=('dkms')
 makedepends=('git')
 source=('sound.tar.gz'
 		'asus-ally-sound-6.1.patch'
-	    'dkms.conf')
+	    'dkms-hda.conf'
+		'dkms-cirrus.conf'
+		'dkms-codecs.conf'
+		)
 sha256sums=('SKIP'
 			'SKIP'
-	        'SKIP')
+	        'SKIP'
+			'SKIP'
+			'SKIP'
+			)
 validpgpkeys=('8A144654AD99CA9E984F4156EC74EAEC196A648E')
 
 prepare() {
@@ -32,25 +38,53 @@ prepare() {
 
 	cp -r "$tmpdir"/* "$srcdir"
     rm -rf "$tmpdir"
+
+	# $srcdir/sound/soc/codecs/Makefile 删掉包含snd-soc-hdac-hdmi的行
+	# sed -i '/snd-soc-hdac-hdmi/d' "$srcdir/sound/soc/codecs/Makefile"
+	
+	# $srcdir/sound/soc/codecs/Makefile 只保留包含snd-soc-cs35l41的行
+	sed -i '/snd-soc-cs35l41/!d' "$srcdir/sound/soc/codecs/Makefile"
 }
 
 package() {
 
-	local DEST="$pkgdir/usr/src/${pkgname%-dkms}-$pkgver"
-	# local SRC="sound/pci/hda/"
-	local SRC="$srcdir/sound/pci/hda/"
+	dkms_names=("hda" "cirrus" "codecs")
+	dkms_dirs=("sound/pci/hda" "drivers/firmware/cirrus" "sound/soc/codecs")
 
+	for i in "${!dkms_names[@]}"; do
+		local dkmsname="${dkms_names[$i]}"
+		local DEST="$pkgdir/usr/src/${pkgname%-dkms}-${dkmsname}-$pkgver"
+		local SRC="$srcdir/${dkms_dirs[$i]}"
 
-	install -dm755 "$DEST"
+		install -dm755 "$DEST"
 
-	for f in "$SRC/"*.[hc] "$SRC/Makefile"; do
-		install -m644 "$f" "$DEST"
+		for f in "$SRC/"*.[hc] "$SRC/Makefile"; do
+			install -m644 "$f" "$DEST"
+		done
+
+		install -m644 dkms-${dkmsname}.conf "$DEST/dkms.conf"
+
+		# substitution in dkms.conf
+		sed -e 's/PACKAGE_NAME=""/PACKAGE_NAME="'"${pkgname%-dkms}-${dkmsname}"'"/' \
+			  -e 's/PACKAGE_VERSION=""/PACKAGE_VERSION="'"$pkgver"'"/' \
+				-i "$DEST/dkms.conf"
 	done
 
-	install -m644 dkms.conf "$DEST"
+	# local DEST="$pkgdir/usr/src/${pkgname%-dkms}-$pkgver"
+	# # local SRC="sound/pci/hda/"
+	# local SRC="$srcdir/sound/pci/hda"
 
-	# substitution in dkms.conf
-	sed -e 's/PACKAGE_NAME=""/PACKAGE_NAME="'"${pkgname%-dkms}"'"/' \
-		  -e 's/PACKAGE_VERSION=""/PACKAGE_VERSION="'"$pkgver"'"/' \
-			-i "$DEST/dkms.conf"
+
+	# install -dm755 "$DEST"
+
+	# for f in "$SRC/"*.[hc] "$SRC/Makefile"; do
+	# 	install -m644 "$f" "$DEST"
+	# done
+
+	# install -m644 dkms.conf "$DEST"
+
+	# # substitution in dkms.conf
+	# sed -e 's/PACKAGE_NAME=""/PACKAGE_NAME="'"${pkgname%-dkms}"'"/' \
+	# 	  -e 's/PACKAGE_VERSION=""/PACKAGE_VERSION="'"$pkgver"'"/' \
+	# 		-i "$DEST/dkms.conf"
 }
