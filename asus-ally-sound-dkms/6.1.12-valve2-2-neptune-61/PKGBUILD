@@ -1,14 +1,14 @@
 # Maintainer: honjow<honjow311 at gmail dot com>
-pkgname=asus-ally-sound-dkms
-pkgver="6.1"
-pkgrel=1
+pkgname=asus-ally-sound-dkms-neptune-61
+pkgver="6.1.12.valve2"
+pkgrel=2
 pkgdesc="Fix for Cirrus Amp in the Asus Ally"
 arch=('x86_64')
 url="https://gitlab.com/evlaV/linux-integration/-/tree/6.1.12-valve2?ref_type=tags"
 license=('GPL2')
 depends=('dkms')
 makedepends=('git')
-source=('sound-pci-hda.tar.gz'
+source=('sound.tar.gz'
 		'asus-ally-sound-6.1.patch'
 	    'dkms.conf')
 sha256sums=('SKIP'
@@ -17,7 +17,7 @@ sha256sums=('SKIP'
 validpgpkeys=('8A144654AD99CA9E984F4156EC74EAEC196A648E')
 
 prepare() {
-	bsdtar -xf "sound-pci-hda.tar.gz"
+	bsdtar -xf "sound.tar.gz"
 	tmpdir=$(mktemp -d)
     cp -r "$srcdir"/* "$tmpdir"
     cd "$tmpdir"
