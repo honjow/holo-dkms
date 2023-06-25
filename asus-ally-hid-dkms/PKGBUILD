@@ -17,21 +17,30 @@ sha256sums=('SKIP'
 validpgpkeys=('8A144654AD99CA9E984F4156EC74EAEC196A648E')
 
 prepare() {
-	bsdtar -xf "drivers-hid.tar.gz" "drivers/hid"
-	cd "$srcdir"
+	bsdtar -xf "drivers-hid.tar.gz"
+	tmpdir=$(mktemp -d)
+    cp -r "$srcdir"/* "$tmpdir"
+    cd "$tmpdir"
+
 	for src in "${source[@]}"; do
 	    src="${src%%::*}"
             src="${src##*/}"
             [[ $src = *.patch ]] || continue
             echo "Applying patch $src..."
-            git apply "../$src"
+            git apply "$src"
   	done
+
+	cp -r "$tmpdir"/* "$srcdir"
+    rm -rf "$tmpdir"
+
+	sed -i '/hid-asus/!d' "$srcdir/drivers/hid/Makefile"
+
 }
 
 package() {
 
 	local DEST="$pkgdir/usr/src/${pkgname%-dkms}-$pkgver"
-	local SRC="drivers/hid/"
+	local SRC="$srcdir/drivers/hid"
 
 	install -dm755 "$DEST"
 
