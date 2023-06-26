@@ -44,6 +44,9 @@ prepare() {
 	
 	# $srcdir/sound/soc/codecs/Makefile 只保留包含snd-soc-cs35l41的行
 	sed -i '/snd-soc-cs35l41/!d' "$srcdir/sound/soc/codecs/Makefile"
+
+	# $srcdir/sound/pci/hda/Makefile 只保留包含  的行
+	sed -i '/snd-hda-scodec-cs35l41\|snd-hda-cs-dsp-ctls\|hda-intel\|CFLAGS/!d' "$srcdir/sound/pci/hda/Makefile"
 }
 
 package() {
